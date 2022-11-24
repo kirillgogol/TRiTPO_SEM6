@@ -7,6 +7,9 @@ import app.users.models.user_api_models as api_user
 class Tag(BaseModel):
     title: str
 
+    class Config:
+        orm_mode = True
+
 
 class ShowTag(Tag):
     id: int
@@ -16,11 +19,14 @@ class ShowTag(Tag):
         arbitrary_types_allowed = True
 
 
-class Catgory(BaseModel):
+class Category(BaseModel):
     title: str
 
+    class Config:
+        orm_mode = True
 
-class ShowCatgory(Catgory):
+
+class ShowCatgory(Category):
     id: int
 
     class Config:
@@ -36,8 +42,8 @@ class Article(BaseModel):
     language: Literal["English", "Russian"]
     user_id: int
 
-    tags: List[Tag]
-    categories: List[Catgory]
+    tags: list[Tag]
+    categories: list[Category]
 
     class Config:
         arbitrary_types_allowed = True
@@ -49,9 +55,10 @@ class ShowArticle(BaseModel):
     content: str
     url: str
     language: Literal["English", "Russian"]
-    user_id: int
-    tags: list
-    categories: list
+    # user_id: int
+    author: api_user.ShowUser
+    tags: list[Tag]
+    categories: list[Category]
 
     class Config:
         orm_mode = True
