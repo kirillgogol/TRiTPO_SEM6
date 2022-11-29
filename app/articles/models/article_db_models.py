@@ -31,7 +31,7 @@ class Article(Base):
     language = Column(String(20))
 
     user_id = Column(Integer, ForeignKey('users.id'))
-    user = relationship("User")
+    author = relationship("User")
 
     categories = relationship("Category", secondary=article_category, back_populates='articles', cascade="delete, all")
     tags = relationship("Tag", secondary=article_tag, back_populates='articles', cascade="delete, all")
@@ -40,8 +40,8 @@ class Article(Base):
 class Category(Base):
     __tablename__ = 'categories'
 
-    id = id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False, index=True)
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(100), nullable=False, index=True)
 
     articles = relationship("Article", secondary=article_category, back_populates='categories')
 
@@ -49,7 +49,7 @@ class Category(Base):
 class Tag(Base):
     __tablename__ = 'tags'
 
-    id = id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     title = Column(String(100), nullable=False, unique=True, index=True)
 
     articles = relationship("Article", secondary=article_tag, back_populates='tags')
