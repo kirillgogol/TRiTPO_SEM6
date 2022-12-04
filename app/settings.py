@@ -18,6 +18,13 @@ class Settings(BaseSettings):
     PORT: str
     DEBUG: bool
 
+    SECRET_KEY: str
+    SECRET_REFRESH_KEY: str
+
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    REFRESH_TOKEN_EXPIRE_MINUTES: int
+
     class Config:
         env_file = '.env'
 
