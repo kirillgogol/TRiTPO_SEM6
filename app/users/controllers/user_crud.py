@@ -11,10 +11,10 @@ class UserController:
 
     @classmethod
     def create_user(cls, request: user_api_models.User, db: Session = Depends(get_db)):
-        encrypted_password = cls.pwd_context.hash(request['password'])
+        encrypted_password = cls.pwd_context.hash(request.password)
         new_user = user_db_models.User(
-            username = request['username'],
-            email = request['email'],
+            username = request.username,
+            email = request.email,
             password = encrypted_password
         )
         db.add(new_user)

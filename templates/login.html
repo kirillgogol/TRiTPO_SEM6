@@ -1,7 +1,23 @@
-<h4>{{message}}</h4>
+<!-- <h4>{{message}}</h4>
 
 <form name="login" id="form_2" action="" method="post" enctype=multipart/form-data>
     Логин<input type="text" required name="email"><br>
     Пароль<input type="password" required name="password"><br>
     <input type="submit" value="Вход">
-</form>
+</form> -->
+<a href="/register">Регистрация</a><br>
+
+<form action="" method="post" enctype=multipart/form-data>
+    <div class="container">
+      <h1>Вход</h1>
+      <h4>{{message}}</h4>
+      <hr>  
+      <label><b>Логин (электронная почта)</b></label>
+      <input required type="email" name="email">
+  
+      <label><b>Пароль</b></label>
+      <input type="password" required name="password">
+  
+      <input type="submit" value="Вход">
+    </div>
+  </form>

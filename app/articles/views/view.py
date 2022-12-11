@@ -14,10 +14,12 @@ router = APIRouter(
     tags=['articles']
 )
 
+# current_user: str = Depends(oauth2.get_current_user)
+
 @router.post('/', status_code=status.HTTP_201_CREATED, tags=['articles'])
 def create_article(request: article_api_models.Article, db: Session = Depends(get_db),
 current_user: user_api_models.User = Depends(oauth2.get_current_user)):   
-    return ArticleController.create_article(request, db)
+    return ArticleController.create_article(request, db, current_user)
 
 
 @router.get('/', response_model=List[article_api_models.ShowArticle], tags=['articles'])

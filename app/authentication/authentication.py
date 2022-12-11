@@ -9,36 +9,22 @@ from app.users.models.user_db_models import User
 from app.db_config import get_db
 
 
-router = APIRouter(tags=['authentication'])
+router = APIRouter(prefix='/auth', tags=['authentication'])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 templates = Jinja2Templates(directory="templates")
 
 
-@router.get('/logout', response_class=HTMLResponse)
-def logout(request: Request):
-    response = RedirectResponse('/login', status_code=307)
-    response.delete_cookie(key='access_token')
-    response.delete_cookie(key='refresh_token')
-    return response
-
-
-@router.get('/login', response_class=HTMLResponse)
-def get_login_from(request: Request):
-
-    return templates.TemplateResponse('login.html', {'request': request})
-
-
 @router.post('/login')
-async def login(request: Request, db: Session = Depends(get_db)):
-    form = await request.form()
+def login(request: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    # form = await request.form()
 
-    user = db.query(User).filter(User.email == form['email']).first()
+    user = db.query(User).filter(User.email == request.username).first()
 
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
-        detail=f'No user with email {form["email"]}')
+        detail=f'No user with email {request.username}')
 
-    if not pwd_context.verify(form['password'], user.password):
+    if not pwd_context.verify(request.password, user.password):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
         detail=f'Incorrect password')
 
@@ -54,7 +40,7 @@ async def login(request: Request, db: Session = Depends(get_db)):
         data={"sub": user.email}, expires_delta=refresh_token_expires
     )
 
-    response = templates.TemplateResponse('login.html', {'request': request, 'message': 'successfully logged in'})
-    response.set_cookie(key='access_token', value=access_token)
-    response.set_cookie(key='refresh_token', value=refresh_token)
-    return response
+    return {
+        'access_token': access_token,
+        'refresh_token': refresh_token
+    }

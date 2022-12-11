@@ -1,0 +1,28 @@
+<a href="/all_articles">Вернуться к статьям</a><br><br>
+
+<form action="" method="post" enctype=multipart/form-data>
+    <div class="container">
+      <h1>Саздание статьи</h1>
+      <h4>{{message}}</h4>
+      <hr>  
+      <label><b>Название статьи</b></label>
+      <input required type="text" name="title">
+  
+      <label><b>Категории</b></label>
+      <select name="category">
+      {% for cat in categories %}
+      <option value="{{cat}}">{{cat}}</option>
+      {% endfor %}
+      </select>
+      <label><b>Краткое описание</b></label>
+      <input required type="text" name="brief_description">
+      <label><b>Язык</b></label>
+      <select name="language">
+        <option value="English">английский</option>
+        <option value="Russian">русский</option>
+      </select>
+      <label><b>Ссылка на статью</b></label>
+      <input required type="text" name="url">
+      <input type="submit" value="Создать">
+    </div>
+  </form>
