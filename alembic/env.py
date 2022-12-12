@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 from app.db_config import SQLALCHEMY_DATABASE_URL, Base
 from app.users.models.user_db_models import User
-from app.articles.models.article_db_models import Article, Category, Tag, article_category, article_tag
+from app.articles.models.article_db_models import Article
 # from app.articles.models.article_db_models import Article, Category, Tag, ArticleTag, ArticleCategory
 
 # this is the Alembic Config object, which provides
