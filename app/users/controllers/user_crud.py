@@ -33,25 +33,25 @@ class UserController:
     def show_user(cls, id: int, db: Session = Depends(get_db)):
         user = db.query(user_db_models.User).filter(user_db_models.User.id == id)
         if not user.first():
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Not found')
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'User with id={id} not found')
         return user.first()
 
 
     @classmethod
-    def delete_user(id: int, db: Session = Depends(get_db)):
+    def delete_user(cls, id: int, db: Session = Depends(get_db)):
         user = db.query(user_db_models.User).filter(user_db_models.User.id == id)
         if not user.first():
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Not found')
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'User with id={id} not found')
         user.delete(synchronize_session=False)
         db.commit()
-        return "Successfully deleted"
+        return {"detail": f"User with id={id} was successfully deleted"}
 
     
     @classmethod
     def update_user(cls, id: int, request: user_api_models.User, db: Session = Depends(get_db)):
         user = db.query(user_db_models.User).filter(user_db_models.User.id == id)
         if not user.first():
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Not found')
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'User with id={id} not found')
         user.update(request.dict(), synchronize_session=False)
         db.commit()
         return user.first()
