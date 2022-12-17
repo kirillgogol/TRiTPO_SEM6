@@ -30,5 +30,5 @@ class Article(Base):
     language = Column(ChoiceType(LANGUAGES))
     category = Column(ChoiceType(CATEGORIES))
 
-    user_id = Column(Integer, ForeignKey('users.id'))
-    author = relationship("User")
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
+    author = relationship("User", back_populates='articles')

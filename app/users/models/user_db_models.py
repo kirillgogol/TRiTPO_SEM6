@@ -11,4 +11,4 @@ class User(Base):
     email = Column(EmailType, nullable=False, unique=True)
     password = Column(String, nullable=False)
 
-    articles = relationship('Article')
+    articles = relationship('Article', back_populates="author", passive_deletes=True)

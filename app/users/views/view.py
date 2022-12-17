@@ -21,20 +21,21 @@ def create_user(request: user_api_models.User, db: Session = Depends(get_db)):
     return UserController.create_user(request, db)
 
 
-@router.get('/all', response_model=List[user_api_models.ShowUser], tags=['users'], )
+@router.get('/all', response_model=List[user_api_models.ShowUser], tags=['users'])
 def get_users(db: Session = Depends(get_db), 
 current_user: user_api_models.User = Depends(oauth2.get_current_user)):
 
     return UserController.show_users(db)
 
+
 @router.get('/{id}', response_model=user_api_models.ShowUser, tags=['users'])
-def get_users(id: int, db: Session = Depends(get_db),
+def get_user(id: int, db: Session = Depends(get_db),
 current_user: user_api_models.User = Depends(oauth2.get_current_user)):
 
     return  UserController.show_user(id, db)
 
 
-@router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT, tags=['users'])
+@router.delete('/{id}', tags=['users'])
 def delete_user(id: int, db: Session = Depends(get_db),
 current_user: user_api_models.User = Depends(oauth2.get_current_user)):
  

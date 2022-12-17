@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 import sys
 import os
@@ -21,14 +22,16 @@ def start_app():
     return app
 
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test_db.db"
+SQLALCHEMY_DATABASE_URL = "sqlite://"
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL, 
+    connect_args={"check_same_thread": False},
+    poolclass = StaticPool
 )
 SessionTesting = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def app():
     Base.metadata.create_all(engine)
     app = start_app()
@@ -36,7 +39,7 @@ def app():
     Base.metadata.drop_all(engine)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def db_session(app: FastAPI):
     connection = engine.connect()
     transaction = connection.begin()
@@ -47,7 +50,7 @@ def db_session(app: FastAPI):
     connection.close()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def client(app: FastAPI, db_session: SessionTesting):
 
     def _get_test_db():
