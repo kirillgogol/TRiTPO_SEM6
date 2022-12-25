@@ -4,8 +4,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from app.db_config import get_db
 import app.users.models.user_db_models as user_db_models
-from app.articles.controllers.article_crud import ArticleController
-from app.users.controllers.user_crud import UserController
+from app.articles.controllers.article_db_controller import ArticleDBController
+from app.users.controllers.user_db_controller import UserDBController
 from app.users.models.user_db_models import User
 from passlib.context import CryptContext
 from app.authentication import token
@@ -29,7 +29,7 @@ def get_articles(request: Request, db: Session = Depends(get_db)):
 
         if not db_user:
             raise HTTPException(status_code=401, detail='No user')
-        articles = ArticleController.show_articles(db)
+        articles = ArticleDBController.show_articles(db)
         return templates.TemplateResponse('index.html', context={'request': request, 'articles': articles})
     except KeyError:
         response = RedirectResponse('/login', status_code=307)

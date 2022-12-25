@@ -12,6 +12,13 @@ ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 REFRESH_TOKEN_EXPIRE_MINUTES = settings.REFRESH_TOKEN_EXPIRE_MINUTES
 
+
+def is_valid_password(password: str):
+    if len(password.replace(' ', '')) >= 6:
+        return True
+    return False
+
+
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:

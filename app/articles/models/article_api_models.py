@@ -1,5 +1,5 @@
 from pydantic import BaseModel, HttpUrl
-from typing import Optional, List, Literal
+from typing import Optional, List, Literal, Union
 from datetime import date
 from enum import Enum
 import app.users.models.user_api_models as api_user
@@ -27,9 +27,10 @@ class Catgory(BaseModel):
 class Article(BaseModel):
     title: str
     brief_description: str
-    url: HttpUrl
+    url: HttpUrl = None
     language: Literal["English", "Russian"]
     category: Literal['python', 'devops', 'javascript', 'testing', 'other']
+    # file: Union[str, None] = None
     # user_id: int
     
     class Config:
@@ -41,6 +42,7 @@ class Article(BaseModel):
 class ShowArticle(Article):
     id: int
     author: api_user.ShowUser
+    file: Union[str, None] = None
 
     class Config:
         orm_mode = True
