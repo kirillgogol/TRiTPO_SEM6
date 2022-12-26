@@ -26,7 +26,8 @@ class Article(Base):
     brief_description = Column(String)
     views = Column(Integer, default=0)
     date_published = Column(DateTime, default=datetime.now)
-    url = Column(String, nullable=False)
+    url = Column(String)
+    file = Column(String)
     language = Column(ChoiceType(LANGUAGES))
     category = Column(ChoiceType(CATEGORIES))
 

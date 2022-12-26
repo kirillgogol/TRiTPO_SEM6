@@ -1,11 +1,10 @@
 from fastapi.testclient import TestClient
 import json
-
+from test_01_users_api import USER_DATA
 
 def test_login(client: TestClient):
 
-    data = {"username":"cat@gmail.com", "password":"1234"}
-    response = client.post("/auth/login", data=data)
+    response = client.post("/auth/login", data=USER_DATA)
     
     assert response.status_code == 200
     assert response.json()["access_token"] is not None
