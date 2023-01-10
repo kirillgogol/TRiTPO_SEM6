@@ -25,40 +25,52 @@ def create_article(
     language: Literal["English", "Russian"],
     category: Literal['python', 'devops', 'javascript', 'testing', 'other'],
     background_tasks: BackgroundTasks,
-    url: HttpUrl = None,
+    url: Union[HttpUrl, str, None] = None,
     file: Union[UploadFile, None] = None,
     db: Session = Depends(get_db), 
     current_user: user_api_models.User = Depends(oauth2.get_current_user)
 ): 
 
     return ArticleAPIController.create_article(
-        title, brief_description, language, category, url, background_tasks,  file, current_user, db
+        title, brief_description, language, category, url, background_tasks, file, current_user, db
     )
     # return ArticleDBController.create_article(request, db, current_user)
 
 
-@router.get('/', response_model=List[article_api_models.ShowArticle])
+@router.get('/all', response_model=List[article_api_models.ShowArticle])
 def get_articles(db: Session = Depends(get_db),
 current_user: user_api_models.User = Depends(oauth2.get_current_user)):
-    return ArticleDBController.show_articles(db)
+    return ArticleAPIController.get_all_articles(db)
 
 @router.get('/{id}', response_model=article_api_models.ShowArticle)
 def get_article(id: int, db: Session = Depends(get_db),
 current_user: user_api_models.User = Depends(oauth2.get_current_user)):
-    return ArticleDBController.show_article(id, db)
+    return ArticleAPIController.get_article(id, db)
 
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_article(id: int, db: Session = Depends(get_db),
 current_user: user_api_models.User = Depends(oauth2.get_current_user)):
  
-    return ArticleDBController.delete_article(id, db)
+    return ArticleAPIController.delete_article(id, current_user, db)
 
 
 @router.put('/{id}', response_model=article_api_models.ShowArticle,
  status_code=status.HTTP_202_ACCEPTED)
-def update_article(id: int, request: article_api_models.Article, db: Session = Depends(get_db),
-current_user: user_api_models.User = Depends(oauth2.get_current_user)):
+def update_article(
+    id: int, 
+    title: str,
+    brief_description: str,
+    language: Literal["English", "Russian"],
+    category: Literal['python', 'devops', 'javascript', 'testing', 'other'],
+    background_tasks: BackgroundTasks,
+    url: HttpUrl = None,
+    file: Union[UploadFile, None] = None,
+    db: Session = Depends(get_db),
+    current_user: user_api_models.User = Depends(oauth2.get_current_user)):
 
-    return ArticleAPIController.update_article(id, request, current_user, db)
+    return ArticleAPIController.update_article(
+        id, title, brief_description, language,
+        category, url, background_tasks, file, current_user, db
+    )
     # return ArticleDBController.update_article(id, request, db)

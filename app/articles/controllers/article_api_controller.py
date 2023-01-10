@@ -16,7 +16,7 @@ class ArticleAPIController:
     def create_article(cls, title, brief_description, language, category, url, 
     background_tasks, file, current_user: User, db: Session = Depends(get_db)):
         try:
-            if len(str(url)) > 0:
+            if len(str(url)) > 0 or file:
                 new_article = Article(
                     title=title,
                     brief_description=brief_description,
@@ -29,14 +29,14 @@ class ArticleAPIController:
                 raise EmptyURLError
 
         except EmptyURLError as e:
-            logger.error(f"Article url should not be empty")
+            logger.error(f"Article url and file should not be empty at the same time")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Article url should not be empty")
+                detail="Article url and file should not be empty at the same time")
 
 
     @classmethod
     def get_all_articles(cls, db: Session = Depends(get_db)):
-        articles = ArticleDBController.show_articles(db)
+        articles = ArticleDBController.get_all_articles(db)
         if len(articles) > 0:
             logger.info(f"All articles were successfully founded")
         else:
@@ -46,7 +46,7 @@ class ArticleAPIController:
     @classmethod
     def get_article(cls, id: int, db: Session = Depends(get_db)):
         try:
-            article = ArticleDBController.show_article(id, db)
+            article = ArticleDBController.get_article(id, db)
             if not article:
                 raise ArticleNotFoundError
             logger.info(f"Article with id={id} was successfully founded")
@@ -57,14 +57,22 @@ class ArticleAPIController:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Article with id={id} is not found')
 
     @classmethod
-    def update_article(cls, id: int, request: Article, current_user: User, db: Session = Depends(get_db)):
+    def update_article(cls, id: int, title, brief_description, language, category, 
+        url, background_tasks, file, current_user: User, db: Session = Depends(get_db)):
         try:
-            article = ArticleDBController.show_article(id, db)
+            article = ArticleDBController.get_article(id, db)
             if not article:
                 raise ArticleNotFoundError
             user = UserDBController.get_user(article.user_id, db)
             if current_user.email == user.email:
-                return ArticleDBController.update_article(id, request, user, db)
+                new_article = Article(
+                    title=title,
+                    brief_description=brief_description,
+                    language=language,
+                    url=url,
+                    category=category
+                )
+                return ArticleDBController.update_article(id, new_article, file, background_tasks, user, db)
             else:
                 raise UnothorizedAccessError
 
@@ -80,7 +88,7 @@ class ArticleAPIController:
     @classmethod
     def delete_article(cls, id: int, current_user: User, db: Session = Depends(get_db)):
         try:
-            article = ArticleDBController.show_article(id, db)
+            article = ArticleDBController.get_article(id, db)
             if not article:
                 raise ArticleNotFoundError
 
@@ -95,8 +103,8 @@ class ArticleAPIController:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Article with id={id} is not found')
 
         except UnothorizedAccessError as e:
-            logger.error(f'Updating provides only for author of the article with id={id}')
+            logger.error(f'Deleting provides only for author of the article with id={id}')
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, 
-                detail=f'Updating provides only for author of the article with id={id}')
+                detail=f'Deleting provides only for author of the article with id={id}')
 
         

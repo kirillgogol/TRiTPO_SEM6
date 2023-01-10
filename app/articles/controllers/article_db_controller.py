@@ -21,25 +21,22 @@ class ArticleDBController:
             if file:
                 new_article = Article(**request.dict(), user_id=user.id, file=file.filename)
                 background_tasks.add_task(write_file, file)
-                db.add(new_article)
-                db.commit()
-                return new_article
             else:
                 new_article = Article(**request.dict(), user_id=user.id)
-                db.add(new_article)
-                db.commit()
-                return new_article
+            db.add(new_article)
+            db.commit()
+            return new_article
 
         except exc.SQLAlchemyError as e:
                 logger.error(e.__traceback__)
                 raise e
 
     @classmethod
-    def show_articles(cls, db: Session = Depends(get_db)):
+    def get_all_articles(cls, db: Session = Depends(get_db)):
         return db.query(Article).all()
 
     @classmethod
-    def show_article(cls, id: int, db: Session = Depends(get_db)):
+    def get_article(cls, id: int, db: Session = Depends(get_db)):
         return db.query(Article).filter(Article.id == id).first()
 
 
@@ -57,20 +54,31 @@ class ArticleDBController:
 
     
     @classmethod
-    def update_article(cls, id: int, request: article_api_models.Article,
+    def update_article(cls, id: int, request: article_api_models.Article, file, background_tasks, 
         user: user_db_models.User, db: Session = Depends(get_db)):
         try:
             article = db.query(Article).filter(Article.id == id).first()
-
             article.title = request.title
             article.brief_description = request.brief_description
             article.url = request.url
             article.language = request.language
             article.category = request.category
             article.user_id = user.id
+            if file:
+                article.file = file.filename
+                background_tasks.add_task(write_file, file)
             db.commit()
             logger.info(f"Article with id={id} successfully updated")
             return article
         except exc.SQLAlchemyError as e:
             logger.error(e.__traceback__)
             raise e
+
+    @classmethod
+    @staticmethod
+    def download_file(id: int, db: Session = Depends(get_db)):
+        article = db.query(Article).filter(Article.id == id).first()
+        return {
+            "path": f"files/{article.file}",
+            "filename": article.file
+        }
