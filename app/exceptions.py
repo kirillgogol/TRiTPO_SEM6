@@ -28,3 +28,11 @@ class ArticleNotFoundError(Exception):
 
 class EmptyURLError(Exception):
     pass
+
+
+class AccessTokenExpiredError(Exception):
+    pass
+
+
+class RefreshTokenExpiredError(Exception):
+    pass

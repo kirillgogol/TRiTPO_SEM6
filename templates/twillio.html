@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+  <body>
+    <h1>Введите 4-значный код, который мы отправили вам в сообщении</h1>
+    <form action="/register/confirmation" method="post">
+      <label for="code">Код:</label>
+      <input type="hidden" name="username" value={{user.username}}>
+      <input type="hidden" name="email" value={{user.email}}>
+      <input type="hidden" name="password" value={{user.password}}>
+      <input type="text" name="code" placeholder="1234">
+      <input type="submit" value="Отправить">
+    </form>
+  </body>
+</html>

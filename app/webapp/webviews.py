@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status, Request, HTTPException
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from sqlalchemy.orm import Session
 from app.db_config import get_db
 import app.users.models.user_db_models as user_db_models
@@ -12,6 +12,10 @@ from app.authentication import token
 from app.authentication.token import verify_access, refresh_token
 from app.articles.models.article_api_models import CategoryEnum
 from app.articles.models.article_db_models import Article
+from app.exceptions import *
+import asyncio
+from app.webapp.controllers.twillio_controller import *
+from random import randint
 
 
 router = APIRouter()
@@ -20,7 +24,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 @router.get('/all_articles')
-def get_articles(request: Request, db: Session = Depends(get_db)):
+async def get_articles(request: Request, db: Session = Depends(get_db)):
     token = request.cookies
     try:
         user = verify_access(token['access_token'])
@@ -29,35 +33,99 @@ def get_articles(request: Request, db: Session = Depends(get_db)):
 
         if not db_user:
             raise HTTPException(status_code=401, detail='No user')
-        articles = ArticleDBController.show_articles(db)
+        articles = ArticleDBController.get_all_articles(db)
         return templates.TemplateResponse('index.html', context={'request': request, 'articles': articles})
     except KeyError:
         response = RedirectResponse('/login', status_code=307)
         return response
-    except Exception:
-        new_token = refresh_token(token['refresh_token'])
-        response = RedirectResponse('/all_articles', status_code=307)
-        response.set_cookie(key='access_token', value=new_token)
+    except AccessTokenExpiredError:
+        try:
+            new_token = refresh_token(token['refresh_token'])
+            response = RedirectResponse('/all_articles', status_code=307)
+            response.set_cookie(key='access_token', value=new_token)
+            return response
+        except RefreshTokenExpiredError:
+            return RedirectResponse('/logout', status_code=307)
+    
+
+@router.post('/download_file/{id}')
+async def download_file(id: int, request: Request, db: Session = Depends(get_db)):
+    token = request.cookies
+    try:
+        user = verify_access(token['access_token'])
+        email = user.email
+        db_user = db.query(user_db_models.User).filter(user_db_models.User.email == email).first()
+
+        if not db_user:
+            raise HTTPException(status_code=401, detail='No user')
+        file = ArticleDBController.download_file(id, db)
+        print(f"\n\n\n\n{file}\n\n\n\n")
+        return FileResponse(filename=file["filename"], path=file["path"], media_type="application/pdf")
+    except KeyError:
+        response = RedirectResponse('/login', status_code=307)
         return response
+    except AccessTokenExpiredError:
+        try:
+            new_token = refresh_token(token['refresh_token'])
+            response = RedirectResponse('/all_articles', status_code=307)
+            response.set_cookie(key='access_token', value=new_token)
+            return response
+        except RefreshTokenExpiredError:
+            return RedirectResponse('/logout', status_code=307)
+
 
 @router.get('/register')
-def get_reg(request: Request):
+async def reg(request: Request):
     return templates.TemplateResponse('registration.html', context={'request': request})
+
+
+SMS_CODE = 0000
 
 
 @router.post('/register', response_class=HTMLResponse)
 async def reg(request: Request, db: Session = Depends(get_db)):
     form = await request.form()
-    encrypted_password = pwd_context.hash(form['password'])
-    user = User(
-        username = form['username'],
-        email = form['email'],
-        password = encrypted_password
-    )
-    db.add(user)
-    db.commit()
-    return RedirectResponse('/login', status_code=307)
-    # return UserController.create_user(form, db)
+    phone = form['phone']
+
+    SMS_CODE = randint(1000, 9999)
+    await asyncio.get_event_loop().run_in_executor(
+        None, send_sms, phone, str(SMS_CODE))
+
+    return templates.TemplateResponse("twillio.html",  
+    context={'request': request, "user": form})
+    # encrypted_password = pwd_context.hash(form['password'])
+    # user = User(
+    #     username = form['username'],
+    #     email = form['email'],
+    #     password = encrypted_password
+    # )
+    # db.add(user)
+    # db.commit()
+    # return RedirectResponse('/login', status_code=307)
+
+
+# @router.get("/twillio")
+# async def test_twillio(request: Request):
+
+#     return templates.TemplateResponse("twillio.html",  context={'request': request})
+
+
+@router.post("/register/confirmation")
+async def confirmation(request: Request, db: Session = Depends(get_db)):
+    form = await request.form()
+    print('\n\n\n\n\n', form["code"], SMS_CODE, '\n\n\n\n\n')
+    if form["code"] == str(SMS_CODE):
+        encrypted_password = pwd_context.hash(form['password'])
+        user = User(
+            username = form['username'],
+            email = form['email'],
+            password = encrypted_password
+        )
+        db.add(user)
+        db.commit()
+        return RedirectResponse('/login', status_code=307)
+    else:
+        return {"error": "неверный код"}
 
 
 @router.get('/logout', response_class=HTMLResponse)
@@ -69,7 +137,7 @@ def logout(request: Request):
 
 
 @router.get('/login', response_class=HTMLResponse)
-def get_login_from(request: Request):
+def login(request: Request):
 
     return templates.TemplateResponse('login.html', {'request': request})
 
@@ -80,12 +148,16 @@ async def login(request: Request, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == form['email']).first()
 
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
-        detail=f'No user with email {form["email"]}')
+        return templates.TemplateResponse(
+            'login.html', 
+            {'request': request, 'message': f'Нет пользователя с логином {form["email"]}'}
+        )
 
     if not pwd_context.verify(form['password'], user.password):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
-        detail=f'Incorrect password')
+        return templates.TemplateResponse(
+            'login.html', 
+            {'request': request, 'message': f'Неверный пароль'}
+        )
 
     access_token_expires = token.timedelta(minutes=token.ACCESS_TOKEN_EXPIRE_MINUTES)
     
@@ -99,7 +171,6 @@ async def login(request: Request, db: Session = Depends(get_db)):
         data={"sub": user.email}, expires_delta=refresh_token_expires
     )
 
-    # response = templates.TemplateResponse('login.html', {'request': request, 'message': 'successfully logged in'})
     response = RedirectResponse('/all_articles', status_code=302)
     response.set_cookie(key='access_token', value=access_token)
     response.set_cookie(key='refresh_token', value=refresh_token)
@@ -121,11 +192,14 @@ async def create_article(request: Request, db: Session = Depends(get_db)):
     except KeyError:
         response = RedirectResponse('/login', status_code=302)
         return response
-    except Exception:
-        new_token = refresh_token(token['refresh_token'])
-        response = RedirectResponse('/create_article', status_code=302)
-        response.set_cookie(key='access_token', value=new_token)
-        return response
+    except AccessTokenExpiredError:
+        try:
+            new_token = refresh_token(token['refresh_token'])
+            response = RedirectResponse('/all_articles', status_code=307)
+            response.set_cookie(key='access_token', value=new_token)
+            return response
+        except RefreshTokenExpiredError:
+            return RedirectResponse('/logout', status_code=307)
     
 
 
@@ -154,8 +228,60 @@ async def create_article(request: Request, db: Session = Depends(get_db)):
     except KeyError:
         response = RedirectResponse('/login', status_code=302)
         return response
-    except Exception:
-        new_token = refresh_token(token['refresh_token'])
-        response = RedirectResponse('/all_articles', status_code=302)
-        response.set_cookie(key='access_token', value=new_token)
+    except AccessTokenExpiredError:
+        try:
+            new_token = refresh_token(token['refresh_token'])
+            response = RedirectResponse('/all_articles', status_code=307)
+            response.set_cookie(key='access_token', value=new_token)
+            return response
+        except RefreshTokenExpiredError:
+            return RedirectResponse('/logout', status_code=307)
+
+
+@router.get('/profile')
+async def profile(request: Request, db: Session = Depends(get_db)):
+    token = request.cookies
+    try:
+        user = verify_access(token['access_token'])
+        db_user = db.query(user_db_models.User).filter(user_db_models.User.email == user.email).first()
+        user_articles = db.query(Article).filter(Article.user_id == db_user.id).all()
+
+        return templates.TemplateResponse(
+            "profile.html", 
+            {"request": request, "user": db_user, "user_articles": user_articles}
+        )
+    except KeyError:
+        response = RedirectResponse('/login', status_code=302)
         return response
+    except AccessTokenExpiredError:
+        try:
+            new_token = refresh_token(token['refresh_token'])
+            response = RedirectResponse('/all_articles', status_code=307)
+            response.set_cookie(key='access_token', value=new_token)
+            return response
+        except RefreshTokenExpiredError:
+            return RedirectResponse('/logout', status_code=307)
+
+
+@router.get("/filtered_articles")
+async def filtered_articles(request: Request, 
+    category: str, title: str, language: str, author: str,
+    db: Session = Depends(get_db)):
+
+    query = db.query(Article)
+
+    if category != "":
+        query = query.filter(Article.category.contains(category))
+
+    if title != "":
+        query = query.filter(Article.title.contains(title))
+
+    if language != "Any":
+        query = query.filter(Article.language == language)
+
+    if author != "":
+        query = query.filter(Article.author.has(email = author))
+
+    articles = query.all()
+
+    return templates.TemplateResponse('index.html', context={'request': request, 'articles': articles})

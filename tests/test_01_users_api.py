@@ -5,9 +5,17 @@ import json
 ACCESS_USERNAME = "cat@gmail.com"
 ACCESS_PASSWORD = "123456"
 
+UNITHORIZED_ACCESS_USERNAME = "cat3@gmail.com"
+UNITHORIZED_ACCESS_PASSWORD = "33333333"
+
 USER_DATA = {
     'username': ACCESS_USERNAME,
     'password': ACCESS_PASSWORD,
+}
+
+USER_DATA_FOR_UNOTHORIZED_ACCESS = {
+    "username":UNITHORIZED_ACCESS_USERNAME,
+    "password":UNITHORIZED_ACCESS_PASSWORD,
 }
 
 
@@ -33,9 +41,17 @@ def test_create_user(client: TestClient):
     assert response.json()["username"] == "cat2"
     assert response.json()["email"] == "cat2@gmail.com"
 
+    data = {"username":"cat3", "email":UNITHORIZED_ACCESS_USERNAME, "password":UNITHORIZED_ACCESS_PASSWORD}
+
+    response = client.post("/user/", data=json.dumps(data))
+    
+    assert response.status_code == 201
+    assert response.json()["username"] == "cat3"
+    assert response.json()["email"] == UNITHORIZED_ACCESS_USERNAME
+
 
 def test_create_user_with_existing_email(client: TestClient):
-    data = {"username":"cat3", "email":"cat2@gmail.com", "password":"1234560000"}
+    data = {"username":"cat31", "email":"cat2@gmail.com", "password":"1234560000"}
     response = client.post("/user/", data=json.dumps(data))
     
     assert response.status_code == 400
@@ -43,13 +59,12 @@ def test_create_user_with_existing_email(client: TestClient):
 
 
 def test_get_all_users(client: TestClient):
-
     token = get_user_token(client, USER_DATA)
 
     response = client.get("/user/all", headers={'Authorization': f'Bearer {token}'})
     
     assert response.status_code == 200
-    assert len(response.json()) == 2
+    assert len(response.json()) == 3
 
 
 def test_get_user_by_id(client: TestClient):
@@ -66,7 +81,6 @@ def test_get_user_by_id(client: TestClient):
 
 def test_get_user_by_wrong_id(client: TestClient):
     user_id = 1000
-
     token = get_user_token(client, USER_DATA)
 
     response = client.get(f"/user/{user_id}", headers={'Authorization': f'Bearer {token}'})

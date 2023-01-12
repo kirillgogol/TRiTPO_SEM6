@@ -44,6 +44,6 @@ class ShowArticle(Article):
     author: api_user.ShowUser
     file: Union[str, None] = None
 
-    class Config:
-        orm_mode = True
-        arbitrary_types_allowed = True
+    # class Config:
+    #     orm_mode = True
+    #     arbitrary_types_allowed = True
