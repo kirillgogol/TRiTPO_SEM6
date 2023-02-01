@@ -1,4 +1,5 @@
 from fastapi import Depends, status, HTTPException
+from fastapi.responses import FileResponse
 from app.db_config import get_db
 from sqlalchemy.orm import Session
 from app.articles.models.article_api_models import Article
@@ -26,12 +27,12 @@ class ArticleAPIController:
                 )
                 return ArticleDBController.create_article(new_article, file, background_tasks, current_user, db)
             else:
-                raise EmptyURLError
+                raise FileUrlError
 
-        except EmptyURLError as e:
-            logger.error(f"Article url and file should not be empty at the same time")
+        except FileUrlError as e:
+            logger.error(f"Article url and file should not be empty or full at the same time")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Article url and file should not be empty at the same time")
+                detail="Article url and file should not be empty or full at the same time")
 
 
     @classmethod
@@ -65,16 +66,24 @@ class ArticleAPIController:
                 raise ArticleNotFoundError
             user = UserDBController.get_user(article.user_id, db)
             if current_user.email == user.email:
-                new_article = Article(
-                    title=title,
-                    brief_description=brief_description,
-                    language=language,
-                    url=url,
-                    category=category
-                )
+                if len(str(url)) > 0 or file:
+                    new_article = Article(
+                        title=title,
+                        brief_description=brief_description,
+                        language=language,
+                        url=url,
+                        category=category
+                    )
+                else:
+                    raise FileUrlError
                 return ArticleDBController.update_article(id, new_article, file, background_tasks, user, db)
             else:
                 raise UnothorizedAccessError
+
+        except FileUrlError as e:
+            logger.error(f"Article url and file should not be empty or full at the same time")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Article url and file should not be empty or full at the same time")
 
         except ArticleNotFoundError as e:
             logger.error(f"Article with id={id} is not found")
@@ -84,6 +93,11 @@ class ArticleAPIController:
             logger.error(f'Updating provides only for author of the article with id={id}')
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, 
                 detail=f'Updating provides only for author of the article with id={id}')
+
+        # except AccessTokenExpiredError as e:
+        #     logger.error(f'Token is expiring')
+        #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, 
+        #         detail=f'Token is expiring')
 
     @classmethod
     def delete_article(cls, id: int, current_user: User, db: Session = Depends(get_db)):
@@ -106,5 +120,21 @@ class ArticleAPIController:
             logger.error(f'Deleting provides only for author of the article with id={id}')
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, 
                 detail=f'Deleting provides only for author of the article with id={id}')
+
+            
+    @classmethod
+    def download_file(cls, id: int, db: Session = Depends(get_db)):
+        try:
+            file = ArticleDBController.download_file(id, db)
+            if not file['filename']:
+                raise FileNotFoundError
+            return FileResponse(filename=file["filename"], path=file["path"], media_type="application/multipart")
+        except ArticleNotFoundError as e:
+            logger.error(f"Article with id={id} is not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Article with id={id} is not found')
+        except FileNotFoundError as e:
+            logger.error(f'Article with id={id} dont have files to download')
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
+                detail=f'Article with id={id} dont have files to download')
 
         

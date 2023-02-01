@@ -19,12 +19,6 @@ USER_DATA_FOR_UNOTHORIZED_ACCESS = {
 }
 
 
-def get_user_token(client: TestClient, user_data):
-    response = client.post('/auth/login', data=user_data)
-    token = response.json()['access_token']
-    return token
-
-
 def test_create_user(client: TestClient):
     data = {"username":"cat", "email":ACCESS_USERNAME, "password":ACCESS_PASSWORD}
     response = client.post("/user/", data=json.dumps(data))
@@ -58,8 +52,8 @@ def test_create_user_with_existing_email(client: TestClient):
     assert response.json()["detail"] == f"User with email {data['email']} is already exist"
 
 
-def test_get_all_users(client: TestClient):
-    token = get_user_token(client, USER_DATA)
+def test_get_all_users(client: TestClient, token):
+    # token = get_user_token(client, USER_DATA)
 
     response = client.get("/user/all", headers={'Authorization': f'Bearer {token}'})
     
@@ -67,10 +61,10 @@ def test_get_all_users(client: TestClient):
     assert len(response.json()) == 3
 
 
-def test_get_user_by_id(client: TestClient):
+def test_get_user_by_id(client: TestClient, token):
     user_id = 2
 
-    token = get_user_token(client, USER_DATA)
+    # token = get_user_token(client, USER_DATA)
 
     response = client.get(f"/user/{user_id}", headers={'Authorization': f'Bearer {token}'})
     
@@ -79,9 +73,9 @@ def test_get_user_by_id(client: TestClient):
     assert response.json()["email"] == "cat2@gmail.com"
 
 
-def test_get_user_by_wrong_id(client: TestClient):
+def test_get_user_by_wrong_id(client: TestClient, token):
     user_id = 1000
-    token = get_user_token(client, USER_DATA)
+    # token = get_user_token(client, USER_DATA)
 
     response = client.get(f"/user/{user_id}", headers={'Authorization': f'Bearer {token}'})
     
@@ -89,10 +83,10 @@ def test_get_user_by_wrong_id(client: TestClient):
     assert response.json()['detail'] == f'User with id={user_id} is not found'
 
 
-def test_update_user(client: TestClient):
+def test_update_user(client: TestClient, token):
     user_id = 2
 
-    token = get_user_token(client, USER_DATA)
+    # token = get_user_token(client, USER_DATA)
 
     data_for_update = {
         'username': 'new_cat2',
@@ -111,10 +105,10 @@ def test_update_user(client: TestClient):
     assert response.json()["email"] == "new_cat2@gmail.com"
 
 
-def test_update_user_by_wrong_id(client: TestClient):
+def test_update_user_by_wrong_id(client: TestClient, token):
     user_id = 1000
 
-    token = get_user_token(client, USER_DATA)
+    # token = get_user_token(client, USER_DATA)
 
     data_for_update = {
         'username': 'new_cat2',
@@ -132,10 +126,10 @@ def test_update_user_by_wrong_id(client: TestClient):
     assert response.json()['detail'] == f'User with id={user_id} is not found'
 
 
-def test_update_user_with_existing_email(client: TestClient):
+def test_update_user_with_existing_email(client: TestClient, token):
     user_id = 2
 
-    token = get_user_token(client, USER_DATA)
+    # token = get_user_token(client, USER_DATA)
 
     data_for_update = {
         'username': 'new_cat2',
@@ -153,10 +147,10 @@ def test_update_user_with_existing_email(client: TestClient):
     assert response.json()['detail'] == f"User with email {data_for_update['email']} is already exist"
 
 
-def test_delete_user_by_id(client: TestClient):
+def test_delete_user_by_id(client: TestClient, token):
     user_id = 2
 
-    token = get_user_token(client, USER_DATA)
+    # token = get_user_token(client, USER_DATA)
 
     response = client.delete(
         f"/user/{user_id}", 
@@ -167,10 +161,10 @@ def test_delete_user_by_id(client: TestClient):
     assert response.json()['detail'] == f"User with id={user_id} was successfully deleted"
 
 
-def test_delete_user_by_wrong_id(client: TestClient):
+def test_delete_user_by_wrong_id(client: TestClient, token):
     user_id = 2
 
-    token = get_user_token(client, USER_DATA)
+    # token = get_user_token(client, USER_DATA)
 
     response = client.delete(
         f"/user/{user_id}", 
