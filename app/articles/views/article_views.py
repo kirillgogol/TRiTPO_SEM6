@@ -74,3 +74,10 @@ def update_article(
         category, url, background_tasks, file, current_user, db
     )
     # return ArticleDBController.update_article(id, request, db)
+
+
+@router.get('/{id}/download_file')
+def download_file(id: int, db: Session = Depends(get_db),
+    current_user: user_api_models.User = Depends(oauth2.get_current_user)):
+
+    return ArticleAPIController.download_file(id, db)

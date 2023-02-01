@@ -2,13 +2,22 @@
 <html>
   <body>
     <h1>Введите 4-значный код, который мы отправили вам в сообщении</h1>
-    <form action="/register/confirmation" method="post">
+    <h4>{{message}}</h4>
+    <form action="/twilio" method="post">
       <label for="code">Код:</label>
       <input type="hidden" name="username" value={{user.username}}>
       <input type="hidden" name="email" value={{user.email}}>
       <input type="hidden" name="password" value={{user.password}}>
-      <input type="text" name="code" placeholder="1234">
-      <input type="submit" value="Отправить">
+      <input type="hidden" name="phone" value={{user.phone}}>
+      <input 
+      id="code-input" 
+      type="text" 
+      name="code" 
+      placeholder="1234"
+      oninput="code_validation()"
+      >
+      <button id="submit-button" type="submit" disabled>Отправить</button>
     </form>
+    <script src="static/scripts.js"></script>
   </body>
 </html>

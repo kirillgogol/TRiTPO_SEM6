@@ -1,16 +1,16 @@
 <a href="/logout">Выйти</a><br>
-<a href="/profile">Мой профиль</a><br>
-<a href="/all_articles">Вернуться к статьям</a><br><br>
+<a href="/all_articles">Перейти к статьям</a><br>
+<a href="/profile">Мой профиль</a><br><br>
 
 <form action="" method="post" enctype=multipart/form-data>
     <div class="container">
-      <h1>Создание статьи</h1>
+      <h1>Редактирование статьи</h1>
       <h4>{{message}}</h4>
       <hr>  
       <table>
         <tr>
           <td><label><b>Название статьи</b></label></td>
-          <td><input required type="text" name="title"></td>
+          <td><input required type="text" name="title" value="{{ article.title }}"></td>
         </tr>
         <tr>
           <td><label><b>Категории</b></label></td>
@@ -22,7 +22,7 @@
         </tr>
         <tr>
           <td><label><b>Краткое описание</b></label></td>
-          <td><input required type="text" name="brief_description"></td>
+          <td><input required type="text" name="brief_description" value="{{ article.brief_description }}"></td>
         </tr>
         <tr>
           <td><label><b>Язык</b></label></td>
@@ -33,14 +33,17 @@
         </tr>
         <tr>
           <td><label><b>Ссылка на статью</b></label></td>
+          {% if article.url %}
+          <td><input type="text" name="url" value="{{ article.url }}"></td>
+          {% else %}
           <td><input type="text" name="url"></td>
+          {% endif %}
         </tr>
         <tr>
           <td><label><b>Вы можете выбрать файл</b></label></td>
           <td><input type="file" name="file"></td>
         </tr>
       </table>
-      
-      <input type="submit" value="Создать">
+      <input type="submit" value="Обновить">
     </div>
   </form>

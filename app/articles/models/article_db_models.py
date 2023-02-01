@@ -28,6 +28,7 @@ class Article(Base):
     date_published = Column(DateTime, default=datetime.now)
     url = Column(String)
     file = Column(String)
+    file_hash = Column(String)
     language = Column(ChoiceType(LANGUAGES))
     category = Column(ChoiceType(CATEGORIES))
 

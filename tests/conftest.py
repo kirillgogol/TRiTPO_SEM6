@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+from test_01_users_api import USER_DATA, USER_DATA_FOR_UNOTHORIZED_ACCESS
 
 import sys
 import os
@@ -62,3 +63,17 @@ def client(app: FastAPI, db_session: SessionTesting):
     app.dependency_overrides[get_db] = _get_test_db
     with TestClient(app) as client:
         yield client
+
+
+@pytest.fixture(scope="module")
+def token(client):
+    response = client.post('/auth/login', data=USER_DATA)
+    token = response.json()['access_token']
+    yield token
+
+
+@pytest.fixture(scope="module")
+def unothorized_access_token(client):
+    response = client.post('/auth/login', data=USER_DATA_FOR_UNOTHORIZED_ACCESS)
+    unothorized_access_token = response.json()['access_token']
+    yield unothorized_access_token

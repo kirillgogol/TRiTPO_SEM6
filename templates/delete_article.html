@@ -4,14 +4,12 @@
 
 <a href="/logout">Выйти</a><br>
 <a href="/all_articles">Перейти к статьям</a><br>
-<a href="/create_article">Создать статью</a><br><br>
+<a href="/profile">Мой профиль</a><br><br>
 
-
-<h1>{{ user.username }}</h1>
-<h3>{{ user.email }}</h3>
-
-<div class='beautiful'>
-{% for article in user_articles %}
+<h1>Вы действительно хотите удалить эту статью?</h1>
+<h4>{{message}}</h4>
+<hr> 
+<div class="beautiful">
     <div>
         Категория: {{ article.category }}<br>
         Название: {{ article.title }}<br>
@@ -27,7 +25,8 @@
         {% endif %}
         Время создания: {{article.date_published.strftime('%Y-%m-%d') }}<br>
         Автор: {{ article.author.email }}<br>
-        (<a href="/update_article/{{ article.id }}">Редактировать</a>)<br>
     </div>
-{% endfor %}
 </div>
+<form action="" method="post" enctype=multipart/form-data>   
+    <input type="submit" value="Да">
+</form>

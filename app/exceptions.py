@@ -26,7 +26,7 @@ class ArticleNotFoundError(Exception):
     pass
 
 
-class EmptyURLError(Exception):
+class FileUrlError(Exception):
     pass
 
 
@@ -35,4 +35,7 @@ class AccessTokenExpiredError(Exception):
 
 
 class RefreshTokenExpiredError(Exception):
+    pass
+
+class TwilioError(Exception):
     pass

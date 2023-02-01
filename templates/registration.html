@@ -1,24 +1,43 @@
 <a href="/login">Войти</a><br>
 
+<h4>{{message}}</h4>
+
 <form action="" method="post" enctype=multipart/form-data>
     <div class="container">
       <h1>Регистрация</h1>
       <hr>
-      <label><b>Имя пользователя</b></label>
-      <input type="text" required name="username">
-  
-      <label><b>Логин (электронная почта)</b></label>
-      <input required type="email" name="email">
-  
-      <label><b>Пароль</b></label>
-      <input type="password" required name="password">
-      
-      <label><b>Номер телефона (для подтверждения, что вы не робот)</b></label>
-      <input name="phone" placeholder="+375290000000">
-  
-      <input type="submit" value="Регистрация">
+      <table>
+        <tr>
+          <td><label><b>Имя пользователя</b></label></td>
+          <td><input type="text" required name="username"></td>
+        </tr>
+        <tr>
+          <td><label><b>Логин (электронная почта)</b></label></td>
+          <td><input required type="email" name="email"></td>
+        </tr>
+        <tr>
+          <td><label><b>Пароль (не менее 6 непробельных символов)</b></label></td>
+          <td> <input 
+            id='password-input' 
+            type="text" 
+            name="password"
+            oninput="register_validation()"
+            ></td>
+        </tr>
+        <tr>
+          <td><label><b>Номер телефона (для подтверждения, что вы не робот)</b></label></td>
+          <td><input 
+            id='phone-input' 
+            name="phone" 
+            placeholder="+375290000000"
+            oninput="register_validation()"
+            ></td>
+        </tr>
+      </table>
+      <button id='submit-button' type="submit" disabled>Регистрация</button>
     </div>
   </form>
+  <script src="static/scripts.js"></script>
 
 <!-- <form name="register" id="form_1" action="" method="post" enctype=multipart/form-data>
     Имя пользователя<input type="text" required name="username"><br>

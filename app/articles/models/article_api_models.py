@@ -10,14 +10,9 @@ class CategoryEnum():
         'devops',
         'python',
         'javascript',
-        'тестирование',
-        'другое'
+        'testing',
+        'other'
     ]
-    # devops = 'devops'
-    # python = 'python'
-    # javascript = 'javascript'
-    # testing = 'тестирование'
-    # other = 'другое'
 
 
 class Catgory(BaseModel):
@@ -30,8 +25,6 @@ class Article(BaseModel):
     url: HttpUrl = None
     language: Literal["English", "Russian"]
     category: Literal['python', 'devops', 'javascript', 'testing', 'other']
-    # file: Union[str, None] = None
-    # user_id: int
     
     class Config:
         orm_mode = True
