@@ -224,6 +224,52 @@ async def update_article(id: int, request: Request, db: Session = Depends(get_db
         return response
 
 
+@router.post('/update_article/{id}', response_class=HTMLResponse)
+async def update_article(id: int, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    try:
+        tokens_verifying_result = verify_tokens(request.cookies, db)
+        form = await request.form()
+
+        article = db.query(Article).filter(Article.id == id).first()
+        if form['file'].filename and form['url'] or not form['file'].filename and not form['url']:
+            return templates.TemplateResponse("update_article.html", 
+            {"request": request, 
+            "message": "Статья должна содержать либо ссылку, либо прикрепленный файл",
+            "categories": CategoryEnum.categories,
+            "article": article
+            })
+
+        article.title = form['title']
+        article.brief_description = form['brief_description']
+        article.category = form['category']
+        article.language = form['language']
+        article.user_id = tokens_verifying_result.user.id
+        article.url = form['url']
+        if article.file:
+            os.remove(f'files/{article.file_hash}')
+        if form['file'].filename:
+            article.url = None
+            article.file = form['file'].filename
+            hash_part = datetime.now()
+            file_hash = str(hash_part.microsecond * hash_part.second) + form["file"].filename
+            article.file_hash = file_hash
+            form['file'].filename = file_hash
+            background_tasks.add_task(write_file, form['file'])
+        else:
+            article.file = None
+            article.file_hash = None
+        db.commit()
+        response = RedirectResponse('/profile', status_code=302)
+        response.set_cookie(
+            key='access_token', value=tokens_verifying_result.access_token
+            ) 
+        return response  
+    except KeyError or UserNotFoundError:
+        return RedirectResponse('/login', status_code=302)
+    except RefreshTokenExpiredError:
+        return RedirectResponse('/logout', status_code=302)
+
+
 @router.get('/profile')
 async def profile(request: Request, db: Session = Depends(get_db)):
     try:

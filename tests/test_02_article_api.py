@@ -60,6 +60,60 @@ def test_get_article_by_wrong_id(client: TestClient, token):
     assert response.json()["detail"] == f'Article with id={article_id} is not found'
 
 
+def test_update_article(client: TestClient, token):
+
+    article_id = 1
+
+    data = {
+    "title":"ARTICLE 1 upd", 
+    "brief_description":"About python", 
+    "url":"https://app.clockify.me/tracker",
+    "language": "English",
+    "category": "python"
+    }
+
+    response = client.put(f"/article/{article_id}", params=data, 
+    headers={'Authorization': f'Bearer {token}'})
+    
+    assert response.status_code == 202
+    assert response.json()["title"] == "ARTICLE 1 upd"
+
+
+def test_update_article_by_wrong_id(client: TestClient, token):
+    article_id = 10000
+
+    data = {
+    "title":"ARTICLE 1 upd", 
+    "brief_description":"About python", 
+    "url":"https://app.clockify.me/tracker",
+    "language": "English",
+    "category": "python"
+    }
+
+    response = client.put(f"/article/{article_id}", params=data, 
+    headers={'Authorization': f'Bearer {token}'})
+    
+    assert response.status_code == 404
+    assert response.json()["detail"] == f'Article with id={article_id} is not found'
+
+
+def test_update_article_by_unothorizated_user(client: TestClient, unothorized_access_token):
+    article_id = 1
+
+    data = {
+    "title":"ARTICLE 1 upd", 
+    "brief_description":"About python", 
+    "url":"https://app.clockify.me/tracker",
+    "language": "English",
+    "category": "python"
+    }
+
+    response = client.put(f"/article/{article_id}", params=data, 
+    headers={'Authorization': f'Bearer {unothorized_access_token}'})
+    
+    assert response.status_code == 403
+    assert response.json()["detail"] == f'Updating provides only for author of the article with id={article_id}'
+
 
 def test_delete_article_by_wrong_id(client: TestClient, token):
     article_id = 10000
